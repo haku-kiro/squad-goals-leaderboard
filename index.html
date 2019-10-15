@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js"></script>
+
+    <title>Leaderboard</title>
+</head>
+
+<body>
+    <div class="updated" id="updated-date">
+        Last updated:
+    </div>
+    <div class="section group">
+        <div class="col span_1_of_2">
+            <h3>
+                Free Code Camp
+            </h3>
+            <div>
+                <canvas id="fccChart" width="350" height="350">
+                </canvas>
+            </div>
+        </div>
+        <div class="col span_1_of_2">
+            <h3>
+                Salesforce Training
+            </h3>
+            <div>
+                <canvas id="sfChart" width="350" height="350">
+                </canvas>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /*  SECTIONS  */
+        .section {
+            clear: both;
+            padding: 0px;
+            margin: 0px;
+        }
+
+        /*  COLUMN SETUP  */
+        .col {
+            display: block;
+            float: left;
+            margin: 1% 0 1% 1.6%;
+        }
+
+        .col:first-child {
+            margin-left: 0;
+        }
+
+        /*  GROUPING  */
+        .group:before,
+        .group:after {
+            content: "";
+            display: table;
+        }
+
+        .group:after {
+            clear: both;
+        }
+
+        .group {
+            zoom: 1;
+            /* For IE 6/7 */
+        }
+
+
+        /*  GRID OF TWO  */
+        .span_2_of_2 {
+            width: 100%;
+        }
+
+        .span_1_of_2 {
+            width: 49.2%;
+        }
+
+        /*  GO FULL WIDTH AT LESS THAN 480 PIXELS */
+
+        @media only screen and (max-width: 480px) {
+            .col {
+                margin: 1% 0 1% 0%;
+            }
+        }
+
+        @media only screen and (max-width: 480px) {
+
+            .span_2_of_2,
+            .span_1_of_2 {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <script>
+        // Getting data:
+        $.ajax({
+            url: "https://ijjvfhx56a.execute-api.us-east-1.amazonaws.com/default/sitedata-dev-hello",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            crossDomain: true,
+            success: function (response) {
+                // TODO: Remove
+                console.log(response);
+                var data = response.data;
+                // Create fcc graph
+                var fcc_data = data.FreeCodeCampData;
+
+                // points (data)
+                var points = fcc_data.map(function (obj) {
+                    return obj.points;
+                });
+
+                // usernames (labels)
+                var fcc_users = fcc_data.map(function (obj) {
+                    return obj.username;
+                });
+
+                var fccContext = document.getElementById('fccChart').getContext('2d');
+                var fccChart = new Chart(fccContext, {
+                    type: 'bar',
+                    data: {
+                        labels: fcc_users,
+                        datasets: [{
+                            label: "Free Code Camp Challenges completed by User",
+                            data: points,
+                            backgroundColor: [
+                                'rgba(75, 192, 192, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 99, 132, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 99, 132, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+
+                // Create salesforce graph
+                var sf_data = data.SalesforceData;
+                console.log(sf_data);
+
+                // points (data)
+                var sf_points = sf_data.map(function (obj) {
+                    return obj.points;
+                });
+
+                // usernames (lables)
+                var sf_users = sf_data.map(function (obj) {
+                    return obj.username;
+                });
+
+                var sfContext = document.getElementById('sfChart').getContext('2d');
+                var sfChart = new Chart(sfContext, {
+                    type: 'bar',
+                    data: {
+                        labels: sf_users,
+                        datasets: [{
+                            label: "Salesforce training Points per User",
+                            data: sf_points,
+                            backgroundColor: [
+                                'rgba(75, 192, 192, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 99, 132, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 99, 132, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+
+                // Update leaderboard
+
+                // At some point - I want to create a 'x points in the last 24 hours' graphic (Maybe d3)
+
+                // Get last update date
+                // Just getting from the fcc data set - should be the same though.
+                var last_updated = fcc_data.map(function (obj) {
+                    return obj.created;
+                })[0];
+
+                // Set the timestamp on the dom
+                var updatedElement = document.getElementById('updated-date');
+                updatedElement.innerHTML = 'Last Updated: ' + last_updated;
+
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                console.log(textStatus);
+            }
+        });
+    </script>
+
+
+</body>
+
+</html>
